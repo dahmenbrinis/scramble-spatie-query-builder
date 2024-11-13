@@ -43,7 +43,8 @@ class AllowedFilterModesExtension extends OperationExtension
         ]);
 
         foreach ($values as $value) {
-            $objectType->addProperty($value, $filterMode);
+            $val = is_a($value ,'Spatie\QueryBuilder\AllowedFilter') ? $value->getName() : $value;
+            $objectType->addProperty($val, $filterMode);
         }
         $parameter->setSchema(Schema::fromType($objectType))
             ->example($this->examples);
