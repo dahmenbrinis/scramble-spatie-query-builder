@@ -38,6 +38,20 @@ class InferHelper
             return $this->inferValuesFromMethodCall($methodCall->args[0]->value, $routeInfo);
         }
 
+        // ->allowedIncludes(ModelResource::allowedIncludes())
+        if ($methodCall->args[0]->value instanceof Node\Expr\StaticCall) {
+            return $this->inferValuesFromStaticCall($methodCall->args[0]->value);
+        }
+
+        return [];
+    }
+
+    public function inferValuesFromStaticCall(Node\Expr\StaticCall $node)
+    {
+        $methodName = $node->name->name;
+        if (method_exists($node->class->name, $methodName) and is_callable([$node->class->name, $methodName]) and is_array($node->class->name::$methodName())) {
+            return $node->class->name::$methodName();
+        }
         return [];
     }
 
