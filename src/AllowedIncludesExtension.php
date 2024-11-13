@@ -8,6 +8,7 @@ use Dedoc\Scramble\Support\Generator\Operation;
 use Dedoc\Scramble\Support\Generator\Parameter;
 use Dedoc\Scramble\Support\Generator\Schema;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
+use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType;
 use Dedoc\Scramble\Support\RouteInfo;
 
@@ -27,20 +28,22 @@ class AllowedIncludesExtension extends OperationExtension
 
         $methodCall = Utils::findMethodCall($routeInfo, self::MethodName);
 
+
         if (! $methodCall) {
             return;
         }
 
         $values = $helper->inferValues($methodCall, $routeInfo);
-        $arrayType = new ArrayType;
-        $arrayType->items->enum($values);
+
+        $objectType = new ObjectType;
 
         $parameter = new Parameter(config($this->configKey), 'query');
 
-        $parameter->setSchema(Schema::fromType((new AnyOf)->setItems([
-            $arrayType,
-            new StringType,
-        ])))->example($this->examples);
+        foreach ($values as $value) {
+            $objectType->addProperty($value, new StringType);
+        }
+        $parameter->setSchema(Schema::fromType($objectType))->example(implode(',',$values));
+
 
         $halt = $this->runHooks($operation, $parameter);
         if (! $halt) {
